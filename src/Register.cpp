@@ -58,7 +58,7 @@ STDAPI DllRegisterServer(void)
         CoUninitialize();
 
     return S_OK;
-}
+} 
 
 //
 // DllUnregisterServer
@@ -72,6 +72,78 @@ STDAPI DllUnregisterServer(void)
     return S_OK;
 }
 
+static BOOL RegisterServer()
+{
+    DebugOut(logTag, L"RegisterServer called");
+
+    HKEY hKey = NULL;
+    HKEY hSubKey = NULL;
+    LONG result;
+    WCHAR achIMEKey[512];
+    WCHAR achFileName[MAX_PATH];
+    DWORD dw;
+
+    if (!GetModuleFileNameW(g_hInst, achFileName, ARRAYSIZE(achFileName)))
+        return FALSE;
+
+    StringCchPrintfW(achIMEKey, ARRAYSIZE(achIMEKey),
+        L"SOFTWARE\\Classes\\CLSID\\{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+        c_clsidTextService.Data1,
+        c_clsidTextService.Data2,
+        c_clsidTextService.Data3,
+        c_clsidTextService.Data4[0],
+        c_clsidTextService.Data4[1],
+        c_clsidTextService.Data4[2],
+        c_clsidTextService.Data4[3],
+        c_clsidTextService.Data4[4],
+        c_clsidTextService.Data4[5],
+        c_clsidTextService.Data4[6],
+        c_clsidTextService.Data4[7]);
+
+    // ✅ CRITICAL FIX: Use HKEY_LOCAL_MACHINE instead of HKEY_CLASSES_ROOT
+    result = RegCreateKeyExW(HKEY_LOCAL_MACHINE, achIMEKey, 0, NULL,
+        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, &dw);
+
+    DebugOut(logTag, L"RegCreateKeyEx result: 0x%08X for path: %s", result, achIMEKey);
+
+    if (result != ERROR_SUCCESS)
+        return FALSE;
+
+    // Set description
+    result = RegSetValueExW(hKey, NULL, 0, REG_SZ,
+        (BYTE*)TEXTSERVICE_DESC,
+        (lstrlenW(TEXTSERVICE_DESC) + 1) * sizeof(WCHAR));
+
+    DebugOut(logTag, L"Set description result: 0x%08X", result);
+
+    // InprocServer32
+    result = RegCreateKeyExW(hKey, L"InprocServer32", 0, NULL,
+        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hSubKey, &dw);
+
+    DebugOut(logTag, L"Create InprocServer32 key result: 0x%08X", result);
+
+    if (result == ERROR_SUCCESS)
+    {
+        result = RegSetValueExW(hSubKey, NULL, 0, REG_SZ,
+            (BYTE*)achFileName,
+            (lstrlenW(achFileName) + 1) * sizeof(WCHAR));
+
+        DebugOut(logTag, L"Set DLL path result: 0x%08X, path: %s", result, achFileName);
+
+        result = RegSetValueExW(hSubKey, L"ThreadingModel", 0, REG_SZ,
+            (BYTE*)TEXTSERVICE_MODEL,
+            (lstrlenW(TEXTSERVICE_MODEL) + 1) * sizeof(WCHAR));
+
+        DebugOut(logTag, L"Set ThreadingModel result: 0x%08X", result);
+
+        RegCloseKey(hSubKey);
+    }
+
+    RegCloseKey(hKey);
+
+    return TRUE;
+}
+/*
 static BOOL RegisterServer()
 {
     DebugOut(logTag, L"RegisterServer called");
@@ -127,7 +199,7 @@ static BOOL RegisterServer()
     RegCloseKey(hKey);
 
     return TRUE;
-}
+} */
 
 static void UnregisterServer()
 {
