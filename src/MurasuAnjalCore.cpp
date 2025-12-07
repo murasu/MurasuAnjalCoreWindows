@@ -362,6 +362,28 @@ STDMETHODIMP CMurasuAnjalTextService::Activate(ITfThreadMgr* pThreadMgr, TfClien
     if (!_InitKeyEventSink())
         return E_FAIL;
 
+    // Check what app we are attaching to
+    ITfThreadMgrEx* pThreadMgrEx = NULL;
+    if (SUCCEEDED(_pThreadMgr->QueryInterface(IID_ITfThreadMgrEx, (void**)&pThreadMgrEx)))
+    {
+        DWORD dwFlags = 0;
+        pThreadMgrEx->GetActiveFlags(&dwFlags);
+
+        if (dwFlags & TF_TMF_IMMERSIVEMODE)
+        {
+            // Running in UWP app (Search, Settings, etc.)
+            DebugOut(logTag, L"Running in IMMERSIVE MODE (UWP)");
+        }
+        else
+        {
+            // Running in desktop app
+            DebugOut(logTag, L"Running in DESKTOP MODE");
+        }
+
+        pThreadMgrEx->Release();
+    }
+	// End check app
+
     return S_OK;
 }
 
@@ -500,6 +522,16 @@ STDMETHODIMP CMurasuAnjalTextService::OnTestKeyDown(ITfContext* pContext, WPARAM
 
 STDMETHODIMP CMurasuAnjalTextService::OnKeyDown(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten)
 {
+    DebugOut(logTag, L"=== OnKeyDown ===");
+    DebugOut(logTag, L"  Context: %p", pContext);
+
+    if (!pContext)
+    {
+        DebugOut(logTag, L"  ERROR: NULL Context!");
+        *pfEaten = FALSE;
+        return S_OK;
+    }
+
     if (!pfEaten)
         return E_INVALIDARG;
 

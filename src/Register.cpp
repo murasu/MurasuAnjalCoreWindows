@@ -1,20 +1,11 @@
 ﻿// Register.cpp
 // COM registration for MurasuAnjalCore TSF IME
-// FIXED VERSION - with all critical missing pieces added
 
 #include "../include/MurasuAnjalCore.h"
 #include "../include/Debug.h"
 #include <olectl.h>
 #include <strsafe.h>
-
-// Predefined category GUIDs 
-// {34745C63-B2F0-4784-8B67-5E12C8701A31}
-//static const GUID GUID_TFCAT_TIP_KEYBOARD =
-//{ 0x34745C63, 0xB2F0, 0x4784, { 0x8B, 0x67, 0x5E, 0x12, 0xC8, 0x70, 0x1A, 0x31 } };
-
-// {13A016DF-560B-46CD-947A-4C3AF1E0E35D}
-//static const GUID GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT =
-//{ 0x13A016DF, 0x560B, 0x46CD, { 0x94, 0x7A, 0x4C, 0x3A, 0xF1, 0xE0, 0xE3, 0x5D } };
+#include <msctf.h>
 
 // Registry helper functions
 static BOOL RegisterProfiles();
@@ -143,63 +134,6 @@ static BOOL RegisterServer()
 
     return TRUE;
 }
-/*
-static BOOL RegisterServer()
-{
-    DebugOut(logTag, L"RegisterServer called");
-
-    HKEY hKey = NULL;
-    HKEY hSubKey = NULL;
-    LONG result;
-    WCHAR achIMEKey[512];
-    WCHAR achFileName[MAX_PATH];
-    DWORD dw;
-
-    if (!GetModuleFileNameW(g_hInst, achFileName, ARRAYSIZE(achFileName)))
-        return FALSE;
-
-    StringCchPrintfW(achIMEKey, ARRAYSIZE(achIMEKey),
-        L"CLSID\\{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-        c_clsidTextService.Data1,
-        c_clsidTextService.Data2,
-        c_clsidTextService.Data3,
-        c_clsidTextService.Data4[0],
-        c_clsidTextService.Data4[1],
-        c_clsidTextService.Data4[2],
-        c_clsidTextService.Data4[3],
-        c_clsidTextService.Data4[4],
-        c_clsidTextService.Data4[5],
-        c_clsidTextService.Data4[6],
-        c_clsidTextService.Data4[7]);
-
-    result = RegCreateKeyExW(HKEY_CLASSES_ROOT, achIMEKey, 0, NULL,
-        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, &dw);
-    if (result != ERROR_SUCCESS)
-        return FALSE;
-
-    RegSetValueExW(hKey, NULL, 0, REG_SZ,
-        (BYTE*)TEXTSERVICE_DESC,
-        (lstrlenW(TEXTSERVICE_DESC) + 1) * sizeof(WCHAR));
-
-    result = RegCreateKeyExW(hKey, L"InprocServer32", 0, NULL,
-        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hSubKey, &dw);
-    if (result == ERROR_SUCCESS)
-    {
-        RegSetValueExW(hSubKey, NULL, 0, REG_SZ,
-            (BYTE*)achFileName,
-            (lstrlenW(achFileName) + 1) * sizeof(WCHAR));
-
-        RegSetValueExW(hSubKey, L"ThreadingModel", 0, REG_SZ,
-            (BYTE*)TEXTSERVICE_MODEL,
-            (lstrlenW(TEXTSERVICE_MODEL) + 1) * sizeof(WCHAR));
-
-        RegCloseKey(hSubKey);
-    }
-
-    RegCloseKey(hKey);
-
-    return TRUE;
-} */
 
 static void UnregisterServer()
 {
@@ -263,6 +197,46 @@ BOOL RegisterProfiles()
     if (hr != S_OK)
         goto Exit;
 
+    // ✅ Set UWP compatibility flag using ProfileMgr
+    ITfInputProcessorProfileMgr* pProfileMgr = NULL;
+    hr = pInputProcessorProfiles->QueryInterface(IID_ITfInputProcessorProfileMgr, (void**)&pProfileMgr);
+
+    if (SUCCEEDED(hr) && pProfileMgr)
+    {
+        TF_INPUTPROCESSORPROFILE profile;
+        ZeroMemory(&profile, sizeof(profile));
+
+        profile.dwProfileType = TF_PROFILETYPE_INPUTPROCESSOR;
+        profile.langid = c_langid;
+        profile.clsid = c_clsidTextService;
+        profile.guidProfile = c_guidProfile;
+        profile.catid = GUID_TFCAT_TIP_KEYBOARD;
+        profile.hklSubstitute = NULL;
+        profile.dwCaps = TF_IPP_CAPS_IMMERSIVESUPPORT | TF_IPP_CAPS_SECUREMODESUPPORT;
+        profile.hkl = NULL;
+        profile.dwFlags = TF_IPP_FLAG_ENABLED;
+
+        hr = pProfileMgr->RegisterProfile(
+            c_clsidTextService,
+            c_langid,
+            c_guidProfile,
+            TEXTSERVICE_DESC,
+            (ULONG)lstrlenW(TEXTSERVICE_DESC),
+            achIconFile,
+            cchIconFile,
+            0,  // uIconIndex
+            NULL,  // hklSubstitute
+            0,  // dwPreferredLayout
+            TRUE,  // bEnabledByDefault
+            profile.dwCaps  // ⭐ This is the critical parameter
+        );
+
+        DebugOut(logTag, L"RegisterProfile with IMMERSIVESUPPORT: 0x%08X", hr);
+
+        pProfileMgr->Release();
+    }
+    // ✅ END OF UWP compatibility flag
+    
     // Manually add the CLSID value to the profile
     // (This is normally done automatically by ITfInputProcessorProfileMgr)
     WCHAR szProfileKey[512];
