@@ -369,25 +369,19 @@ static void UnregisterCategories()
 
     if (SUCCEEDED(hr))
     {
-        // ✅ CRITICAL: Unregister all categories we registered
-        pCategoryMgr->UnregisterCategory(c_clsidTextService,
-            GUID_TFCAT_TIP_KEYBOARD,
-            c_clsidTextService);
+        pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIP_KEYBOARD, c_clsidTextService);
+        pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
+        pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER, c_clsidTextService);
+        pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_UIELEMENTENABLED, c_clsidTextService);
 
-        pCategoryMgr->UnregisterCategory(c_clsidTextService,
-            GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT,
-            c_clsidTextService);
-
-        pCategoryMgr->UnregisterCategory(c_clsidTextService,
-            GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER,
-            c_clsidTextService);
-
-        pCategoryMgr->UnregisterCategory(c_clsidTextService, 
-            GUID_TFCAT_TIPCAP_UIELEMENTENABLED, 
-            c_clsidTextService);
+        pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SECUREMODE, c_clsidTextService);
+        pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_COMLESS, c_clsidTextService);
+        pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_INPUTMODECOMPARTMENT, c_clsidTextService);
+        pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, c_clsidTextService);
 
         pCategoryMgr->Release();
     }
+
 
     DebugOut(logTag, L"UnregisterCategories END");
 }
