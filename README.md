@@ -119,3 +119,7 @@ The implementation is intentionally minimal:
 - `src/Register.cpp` - COM registration
 - `src/MurasuAnjalCore.def` - DLL exports
 - `Build-Installer.ps1` - Automated build script for installer artifacts
+
+## Windows Search Bar Support
+
+MurasuAnjalCore works in the Windows Search bar when installed via a proper installer (e.g., Advanced Installer). Key requirements: (1) Static runtime linking (/MT compiler flag), (2) Installation to Program Files rather than System32, and (3) COM registration handled by the installer. Manual regsvr32 registration from System32 does not work reliably. No special Search integration APIs are required.
