@@ -230,6 +230,7 @@
   <ItemGroup>
     <ClCompile Include="src\MurasuAnjalCore.cpp" />
     <ClCompile Include="src\Register.cpp" />
+    <ClCompile Include="src\SearchCandidateProvider.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Debug.h" />
@@ -237,6 +238,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\MurasuAnjalCore.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="include\SearchCandidateProvider.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

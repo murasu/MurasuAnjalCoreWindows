@@ -49,6 +49,10 @@ public:
         {
             *ppvObj = (ITfEditSession*)this;
         }
+        else if (IsEqualIID(riid, IID_ITfFunctionProvider))
+        {
+            *ppvObj = (ITfFunctionProvider*)this;
+        }
 
         if (*ppvObj)
         {
@@ -286,11 +290,14 @@ STDMETHODIMP CClassFactory::LockServer(BOOL fLock)
 //
 CMurasuAnjalTextService::CMurasuAnjalTextService()
 {
+    DebugOut(L"=== CMurasuAnjalTextService Constructor ===\n");
+
     _refCount = 1;
     _tfClientId = TF_CLIENTID_NULL;
     _pThreadMgr = NULL;
     _dwThreadMgrEventSinkCookie = TF_INVALID_COOKIE;
     _isKeyboardEnabled = TRUE;
+    _pSearchCandidateProvider = NULL;
 
     InterlockedIncrement(&g_cRefDll);
 }
@@ -298,6 +305,11 @@ CMurasuAnjalTextService::CMurasuAnjalTextService()
 CMurasuAnjalTextService::~CMurasuAnjalTextService()
 {
     InterlockedDecrement(&g_cRefDll);
+    if (_pSearchCandidateProvider)
+    {
+        _pSearchCandidateProvider->Release();
+        _pSearchCandidateProvider = NULL;
+    }
 }
 
 STDMETHODIMP CMurasuAnjalTextService::QueryInterface(REFIID riid, void** ppvObj)
@@ -405,7 +417,7 @@ STDMETHODIMP CMurasuAnjalTextService::Deactivate()
 
 STDMETHODIMP CMurasuAnjalTextService::ActivateEx(ITfThreadMgr* ptim, TfClientId tid, DWORD dwFlags)
 {
-	DebugOut(logTag, L"ActivateEx() called!");
+	DebugOut(logTag, L"=== ActivateEx() called! flags: 0x%08X ===", dwFlags);
 
     return Activate(ptim, tid);
 }
@@ -724,4 +736,42 @@ const wchar_t* CMurasuAnjalTextService::GetTamilChar(char key)
     // This method allows for future expansion to support conjuncts
 
     return buffer;
+}
+
+
+// Search Function Provider Methods 
+STDMETHODIMP CMurasuAnjalTextService::GetType(GUID* pguid)
+{
+    *pguid = GUID_NULL;
+    return S_OK;
+}
+
+STDMETHODIMP CMurasuAnjalTextService::GetDescription(BSTR* pbstrDesc)
+{
+    *pbstrDesc = SysAllocString(L"Murasu Anjal Tamil99 Function Provider");
+    return S_OK;
+}
+
+STDMETHODIMP CMurasuAnjalTextService::GetFunction(REFGUID rguid, REFIID riid, IUnknown** ppunk)
+{
+    DebugOut(logTag, L"GetFunction called!");
+
+    if (ppunk == NULL)
+        return E_INVALIDARG;
+
+    *ppunk = NULL;
+
+    // For ITfFnSearchCandidateProvider, rguid should be GUID_NULL
+    if (IsEqualGUID(rguid, GUID_NULL))
+    {
+        if (IsEqualGUID(riid, IID_ITfFnSearchCandidateProvider))
+        {
+            if (!_pSearchCandidateProvider)
+                _pSearchCandidateProvider = new CSearchCandidateProvider();
+
+            return _pSearchCandidateProvider->QueryInterface(riid, (void**)ppunk);
+        }
+    }
+
+    return E_NOINTERFACE;
 }

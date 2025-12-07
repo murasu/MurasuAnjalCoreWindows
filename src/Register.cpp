@@ -337,6 +337,18 @@ static BOOL RegisterCategories()
 
     DebugOut(logTag, L"RegisterCategory(GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER) result: 0x%08X", hr);
 
+
+    hr = pCategoryMgr->RegisterCategory(c_clsidTextService,
+        GUID_TFCAT_TIPCAP_UIELEMENTENABLED,
+        c_clsidTextService);
+    DebugOut(logTag, L"RegisterCategory(GUID_TFCAT_TIPCAP_UIELEMENTENABLED) result: 0x%08X", hr);
+
+    // Add these 4 to Register.cpp:
+    hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SECUREMODE, c_clsidTextService);
+    hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_COMLESS, c_clsidTextService);
+    hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_INPUTMODECOMPARTMENT, c_clsidTextService);
+    hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, c_clsidTextService);
+
     result = SUCCEEDED(hr);
     pCategoryMgr->Release();
 
@@ -368,6 +380,10 @@ static void UnregisterCategories()
 
         pCategoryMgr->UnregisterCategory(c_clsidTextService,
             GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER,
+            c_clsidTextService);
+
+        pCategoryMgr->UnregisterCategory(c_clsidTextService, 
+            GUID_TFCAT_TIPCAP_UIELEMENTENABLED, 
             c_clsidTextService);
 
         pCategoryMgr->Release();

@@ -8,8 +8,10 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <msctf.h>
+#include <ctffunc.h>
 #include <olectl.h>
 #include <string>
+#include "SearchCandidateProvider.h"
 
 // CLSID for the Text Input Processor
 // {F7123523-AA20-43CB-8BE3-8AA74E8584F9}
@@ -54,7 +56,8 @@ private:
 class CMurasuAnjalTextService : public ITfTextInputProcessor,
     public ITfTextInputProcessorEx,
     public ITfThreadMgrEventSink,
-    public ITfKeyEventSink
+    public ITfKeyEventSink,
+    public ITfFunctionProvider
 {
 public:
     CMurasuAnjalTextService();
@@ -87,6 +90,11 @@ public:
     STDMETHODIMP OnKeyUp(ITfContext* pContext, WPARAM wParam, LPARAM lParam, BOOL* pfEaten);
     STDMETHODIMP OnPreservedKey(ITfContext* pContext, REFGUID rguid, BOOL* pfEaten);
 
+	// Search Candidate Provider
+    STDMETHODIMP GetType(GUID* pguid);
+    STDMETHODIMP GetDescription(BSTR* pbstrDesc);
+    STDMETHODIMP GetFunction(REFGUID rguid, REFIID riid, IUnknown** ppunk);
+
     // Helper methods
     BOOL _InitThreadMgrEventSink();
     void _UninitThreadMgrEventSink();
@@ -100,6 +108,7 @@ private:
     TfClientId _tfClientId;
     ITfThreadMgr* _pThreadMgr;
     DWORD _dwThreadMgrEventSinkCookie;
+    CSearchCandidateProvider* _pSearchCandidateProvider;
     BOOL _isKeyboardEnabled;
 
     // Simple Tamil99 mapping - embedded in code, no external files
