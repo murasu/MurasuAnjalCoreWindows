@@ -1,0 +1,5 @@
+# Run from your build directory as Administrator
+cd C:\Users\nedum\Projects\MurasuAnjalCore
+PowerShell -ExecutionPolicy Bypass -File install_tamil99.ps1 -BuildDir "ARM64EC\Debug" -DllName "MurasuAnjalCore.dll"
+
+Make sure the binary is stored at the specified path or debug it to check for problems with the binary dependant dll files.

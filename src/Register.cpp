@@ -239,6 +239,7 @@ BOOL RegisterProfiles()
     
     // Manually add the CLSID value to the profile
     // (This is normally done automatically by ITfInputProcessorProfileMgr)
+    /*
     WCHAR szProfileKey[512];
     swprintf_s(szProfileKey,
         L"SOFTWARE\\Microsoft\\CTF\\TIP\\{F7123523-AA20-43CB-8BE3-8AA74E8584F9}\\LanguageProfile\\0x00000449\\{B243DC17-B1C8-496A-B00B-5EB8C3EE4B6F}");
@@ -257,7 +258,7 @@ BOOL RegisterProfiles()
             (BYTE*)&dwEnable, sizeof(DWORD));
 
         RegCloseKey(hKey);
-    }
+    } */
 
     // Enable the profile
     hr = pInputProcessorProfiles->EnableLanguageProfile(
